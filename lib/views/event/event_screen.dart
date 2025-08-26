@@ -15,7 +15,34 @@ final eventListProvider = StateNotifierProvider<EventListNotifier, List<Map<Stri
 final filteredEventNamesProvider = StateProvider<List<String>>((ref) => []);
 
 class EventListNotifier extends StateNotifier<List<Map<String, dynamic>>> {
-  EventListNotifier() : super([]);
+  EventListNotifier() : super([
+    // Sample events to get started
+    {
+      'id': '1',
+      'name': 'Wedding Ceremony',
+      'date': '2024-02-15',
+      'location': 'Grand Hotel',
+      'client': 'John & Sarah',
+      'status': 'Active',
+    },
+    {
+      'id': '2',
+      'name': 'Corporate Event',
+      'date': '2024-02-20',
+      'location': 'Business Center',
+      'client': 'Tech Corp',
+      'status': 'Active',
+    },
+    {
+      'id': '3',
+      'name': 'Birthday Party',
+      'date': '2024-02-25',
+      'location': 'Community Hall',
+      'client': 'Mike Johnson',
+      'status': 'Active',
+    },
+  ]);
+  
   void addEvent(Map<String, dynamic> event) => state = [...state, event];
   void clear() => state = [];
 }
@@ -69,6 +96,100 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         : allEvents.where((event) => event.toLowerCase().contains(q)).toList();
   }
 
+  void _editEvent(Map<String, dynamic> eventData) async {
+    final TextEditingController nameController = TextEditingController(text: eventData['name']);
+    
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Event'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Event Name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.trim().isNotEmpty) {
+                Navigator.pop(context, {
+                  'id': eventData['id'],
+                  'name': nameController.text.trim(),
+                  'status': eventData['status'],
+                });
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      final eventNotifier = ref.read(eventListProvider.notifier);
+      final events = eventNotifier.state;
+      final index = events.indexWhere((e) => e['id'] == eventData['id']);
+      if (index != -1) {
+        final updatedEvents = List<Map<String, dynamic>>.from(events);
+        updatedEvents[index] = result;
+        eventNotifier.state = updatedEvents;
+        
+        // Update filtered events
+        final allEvents = updatedEvents.map((e) => e['name'] as String).toList();
+        ref.read(filteredEventNamesProvider.notifier).state = allEvents;
+      }
+    }
+  }
+
+  void _deleteEvent(Map<String, dynamic> eventData) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Event'),
+        content: Text('Are you sure you want to delete "${eventData['name']}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final eventNotifier = ref.read(eventListProvider.notifier);
+              final events = eventNotifier.state;
+              final updatedEvents = events.where((e) => e['id'] != eventData['id']).toList();
+              eventNotifier.state = updatedEvents;
+              
+              // Update filtered events
+              final allEvents = updatedEvents.map((e) => e['name'] as String).toList();
+              ref.read(filteredEventNamesProvider.notifier).state = allEvents;
+              
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${eventData['name']} deleted successfully'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final allEventsData = ref.watch(eventListProvider);
@@ -87,9 +208,9 @@ class _EventScreenState extends ConsumerState<EventScreen> {
         centerTitle: true,
         backgroundColor: AppColors.primary,
         elevation: 0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
-        ),
+        // shape: const RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+        // ),
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           Container(
@@ -302,39 +423,91 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                                                 color: AppColors.primary,
                                               ),
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Tap to view details',
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                color: Colors.grey.shade600,
-                                              ),
-                                            ),
+                                                                                         const SizedBox(height: 4),
+                                             Text(
+                                               'Event ID: ${eventData['id']}',
+                                               style: TextStyle(
+                                                 fontSize: 12,
+                                                 color: Colors.grey.shade500,
+                                               ),
+                                             ),
                                           ],
                                         ),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              AppColors.primary.withOpacity(0.1),
-                                              AppColors.primary.withOpacity(0.05),
-                                            ],
+                                      PopupMenuButton<String>(
+                                        icon: Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                              colors: [
+                                                AppColors.primary.withOpacity(0.1),
+                                                AppColors.primary.withOpacity(0.05),
+                                              ],
+                                            ),
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: AppColors.primary.withOpacity(0.2),
+                                              width: 1,
+                                            ),
                                           ),
-                                          borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(
-                                            color: AppColors.primary.withOpacity(0.2),
-                                            width: 1,
+                                          child: Icon(
+                                            Icons.more_vert,
+                                            color: AppColors.primary,
+                                            size: 18,
                                           ),
                                         ),
-                                        child: Icon(
-                                          Icons.arrow_forward_ios,
-                                          size: 18,
-                                          color: AppColors.primary,
-                                        ),
+                                        onSelected: (value) {
+                                          if (value == 'edit') {
+                                            _editEvent(eventData);
+                                          } else if (value == 'delete') {
+                                            _deleteEvent(eventData);
+                                          } else if (value == 'view') {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) => EventDetailsScreen(
+                                                  eventData: eventData,
+                                                  isAdmin: widget.isAdmin,
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        },
+                                        itemBuilder: (context) => [
+                                          const PopupMenuItem(
+                                            value: 'view',
+                                            child: Row(
+                                              children: [
+                                                Icon(Icons.visibility, size: 20),
+                                                SizedBox(width: 8),
+                                                Text('View Details'),
+                                              ],
+                                            ),
+                                          ),
+                                          if (widget.isAdmin) ...[
+                                            const PopupMenuItem(
+                                              value: 'edit',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.edit, size: 20),
+                                                  SizedBox(width: 8),
+                                                  Text('Edit'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(Icons.delete, size: 20, color: Colors.red),
+                                                  SizedBox(width: 8),
+                                                  Text('Delete', style: TextStyle(color: Colors.red)),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -368,18 +541,19 @@ class _EventScreenState extends ConsumerState<EventScreen> {
                   ),
                 ],
               ),
-              child: FloatingActionButton.extended(
-                onPressed: () async {
-                  final newEvent = await Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AddEventScreen()),
-                  );
-                  if (newEvent != null && newEvent is Map<String, dynamic>) {
-                    ref.read(eventListProvider.notifier).addEvent(newEvent);
-                    final allEvents =
-                        ref.read(eventListProvider).map((e) => e['name'] as String).toList();
-                    ref.read(filteredEventNamesProvider.notifier).state = allEvents;
-                  }
-                },
+                             child: FloatingActionButton.extended(
+                 heroTag: "event_add_button", // Added unique hero tag
+                 onPressed: () async {
+                   final newEvent = await Navigator.of(context).push(
+                     MaterialPageRoute(builder: (_) => const AddEventScreen()),
+                   );
+                   if (newEvent != null && newEvent is Map<String, dynamic>) {
+                     ref.read(eventListProvider.notifier).addEvent(newEvent);
+                     final allEvents =
+                         ref.read(eventListProvider).map((e) => e['name'] as String).toList();
+                     ref.read(filteredEventNamesProvider.notifier).state = allEvents;
+                   }
+                 },
                 icon: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(

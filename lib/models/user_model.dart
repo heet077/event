@@ -19,16 +19,37 @@ class UserModel {
       username: json['username'],
       email: json['email'],
       role: json['role'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at']) 
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'id': id,
       'username': username,
       'email': email,
       'role': role,
+      'created_at': createdAt?.toIso8601String(),
     };
+  }
+
+  // Copy with method for updating user data
+  UserModel copyWith({
+    int? id,
+    String? username,
+    String? role,
+    String? email,
+    DateTime? createdAt,
+  }) {
+    return UserModel(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      role: role ?? this.role,
+      email: email ?? this.email,
+      createdAt: createdAt ?? this.createdAt,
+    );
   }
 }
 

@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart'; // for formatting date
@@ -20,12 +22,22 @@ class _AddYearScreenState extends ConsumerState<AddYearScreen> {
   final TextEditingController _descriptionController = TextEditingController();
   DateTime? _selectedDate;
   File? _coverImage;
+  Uint8List? _coverImageBytes;
 
   Future<void> _pickImage() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
       setState(() {
-        _coverImage = File(picked.path);
+        if (kIsWeb) {
+          // For web, we need to read the image as bytes
+          picked.readAsBytes().then((bytes) {
+            setState(() {
+              _coverImageBytes = bytes;
+            });
+          });
+        } else {
+          _coverImage = File(picked.path);
+        }
       });
     }
   }
@@ -50,7 +62,7 @@ class _AddYearScreenState extends ConsumerState<AddYearScreen> {
     final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
 
-    if (year.isEmpty || _selectedDate == null || location.isEmpty || _coverImage == null) {
+    if (year.isEmpty || _selectedDate == null || location.isEmpty || (_coverImage == null && _coverImageBytes == null)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all required fields.")),
       );
@@ -62,7 +74,8 @@ class _AddYearScreenState extends ConsumerState<AddYearScreen> {
       'date': DateFormat('yyyy-MM-dd').format(_selectedDate!),
       'location': location,
       'description': description,
-      'image': _coverImage!.path,
+      'image': kIsWeb ? 'web_image' : _coverImage!.path,
+      'imageBytes': _coverImageBytes,
     };
 
     ref.read(yearsProvider(widget.eventName).notifier).addYear(yearData);
@@ -631,7 +644,32 @@ class _AddYearScreenState extends ConsumerState<AddYearScreen> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
-                                child: Image.file(_coverImage!, fit: BoxFit.cover),
+                                child: _coverImage != null
+                                    ? (kIsWeb 
+                                        ? Image.memory(
+                                            _coverImageBytes!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                color: AppColors.primary,
+                                                child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                              );
+                                            },
+                                          )
+                                        : Image.file(
+                                            _coverImage!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                color: AppColors.primary,
+                                                child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                              );
+                                            },
+                                          ))
+                                    : Container(
+                                        color: AppColors.primary,
+                                        child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                      ),
                               ),
                             ),
                       const SizedBox(height: 16),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../../themes/app_theme.dart';
 import '../custom_widget/custom_input_field.dart';
 
@@ -19,6 +18,8 @@ class _AddEventScreenState extends State<AddEventScreen> {
       final eventName = _eventNameController.text.trim();
       final eventData = {
         'name': eventName,
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'status': 'Active',
       };
       Navigator.of(context).pop(eventData);
     }

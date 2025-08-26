@@ -1,5 +1,6 @@
 import 'dart:io';
-
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../themes/app_theme.dart';
@@ -163,15 +164,81 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.eventData['name'],
-              style: const TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
+            // Event Header with Image
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 20,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                                     Row(
+                     children: [
+                       Container(
+                         width: 80,
+                         height: 80,
+                         decoration: BoxDecoration(
+                           color: AppColors.primary.withOpacity(0.1),
+                           borderRadius: BorderRadius.circular(16),
+                         ),
+                         child: Icon(
+                           Icons.event,
+                           size: 40,
+                           color: AppColors.primary,
+                         ),
+                       ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.eventData['name'],
+                              style: const TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                                                         const SizedBox(height: 8),
+                             Row(
+                               children: [
+                                 Icon(Icons.info_outline, size: 16, color: Colors.grey[600]),
+                                 const SizedBox(width: 8),
+                                 Expanded(
+                                   child: Text(
+                                     'Event ID: ${widget.eventData['id']}',
+                                     style: TextStyle(
+                                       fontSize: 14,
+                                       color: Colors.grey[600],
+                                     ),
+                                     overflow: TextOverflow.ellipsis,
+                                   ),
+                                 ),
+                               ],
+                             ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
+            
+            const SizedBox(height: 30),
+            
             Text(
               'Event History',
               style: TextStyle(
@@ -227,8 +294,26 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: image.startsWith('http')
-                                ? Image.network(image, fit: BoxFit.contain)
-                                : Image.file(File(image), fit: BoxFit.contain),
+                                ? Image.network(
+                                    image, 
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.error, size: 50),
+                                      );
+                                    },
+                                  )
+                                : Image.file(
+                                    File(image), 
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey[200],
+                                        child: const Icon(Icons.error, size: 50),
+                                      );
+                                    },
+                                  ),
                           ),
                         ),
                       );
@@ -247,8 +332,42 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
                             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
                             child: image.isNotEmpty
                                 ? (isNetworkImage
-                                ? Image.network(image, fit: BoxFit.cover)
-                                : Image.file(File(image), fit: BoxFit.cover))
+                                ? Image.network(
+                                    image, 
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: AppColors.primary,
+                                        child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                      );
+                                    },
+                                  )
+                                : (kIsWeb 
+                                    ? (yearData['imageBytes'] != null
+                                        ? Image.memory(
+                                            yearData['imageBytes'],
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return Container(
+                                                color: AppColors.primary,
+                                                child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                              );
+                                            },
+                                          )
+                                        : Container(
+                                            color: AppColors.primary,
+                                            child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                          ))
+                                    : Image.file(
+                                        File(image), 
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Container(
+                                            color: AppColors.primary,
+                                            child: const Icon(Icons.image, size: 56, color: Colors.white),
+                                          );
+                                        },
+                                      )))
                                 : Container(
                               color: AppColors.primary,
                               child: const Icon(Icons.image, size: 56, color: Colors.white),
@@ -330,14 +449,15 @@ class _EventDetailsScreenState extends ConsumerState<EventDetailsScreen> {
           ],
         ),
       ),
-      floatingActionButton: widget.isAdmin
-          ? FloatingActionButton.extended(
-        onPressed: () async {
-          final newYear = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => AddYearScreen(eventName: widget.eventData['name'])),
-          );
-          // Do NOT call _addNewYear here, since AddYearScreen already updates the provider.
-        },
+             floatingActionButton: widget.isAdmin
+           ? FloatingActionButton.extended(
+         heroTag: "event_details_add_year", // Added unique hero tag
+         onPressed: () async {
+           final newYear = await Navigator.of(context).push(
+             MaterialPageRoute(builder: (_) => AddYearScreen(eventName: widget.eventData['name'])),
+           );
+           // Do NOT call _addNewYear here, since AddYearScreen already updates the provider.
+         },
         icon: const Icon(Icons.add),
         label: const Text('Add Year'),
         backgroundColor: AppColors.primary,

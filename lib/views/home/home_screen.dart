@@ -5,7 +5,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/bottom_nav_provider.dart';
 import '../dashboard/dashboard_screen.dart';
 import '../event/event_screen.dart';
-import '../inventory/inventory_screen.dart';
+import '../inventory/inventory_list_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -19,7 +19,7 @@ class HomeScreen extends ConsumerWidget {
     final List<Widget> screens = [
       const EventDashboardScreen(),
       EventScreen(isAdmin: isAdmin), // ✅ Pass dynamically
-      const InventoryScreen(),
+      const InventoryListScreen(),
     ];
 
     return Scaffold(
@@ -32,7 +32,7 @@ class HomeScreen extends ConsumerWidget {
         backgroundColor: Colors.white,
         activeColor: Theme.of(context).primaryColor,
         color: Colors.grey[600],
-        height: 48,
+        height: 60,
         elevation: 2,
         items: const [
           TabItem(icon: Icon(Icons.dashboard), title: 'Dashboard'),

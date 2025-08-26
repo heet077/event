@@ -370,6 +370,7 @@ class _DesignTabState extends ConsumerState<DesignTab> {
                   ],
                 ),
                 child: FloatingActionButton.extended(
+                  heroTag: "design_tab_add_button", // Added unique hero tag
                   onPressed: () => _showAddDialog(context, label, isDesignTab),
                   icon: Container(
                     padding: const EdgeInsets.all(4),

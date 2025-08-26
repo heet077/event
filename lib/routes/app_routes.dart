@@ -1,3 +1,4 @@
+import 'package:avd_decoration_application/views/inventory/add_inventory_screen.dart';
 import 'package:flutter/material.dart';
 
 import '../views/auth/login_screen.dart';
@@ -61,7 +62,7 @@ class AppRoutes {
         );
 
       case inventory:
-        return MaterialPageRoute(builder: (_) => const InventoryScreen());
+        return MaterialPageRoute(builder: (_) => const InventoryFormPage());
 
     // case eventTemplates:
     //   return MaterialPageRoute(builder: (_) => const EventTemplateScreen());

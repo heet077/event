@@ -24,7 +24,7 @@ class EventTabsScreen extends StatelessWidget {
             indicatorColor: AppColors.secondary,
             indicatorWeight: 4,
             tabs: [
-              Tab(text: 'Material'),
+              Tab(text: 'Inventory'),
               Tab(text: 'Design'),
               Tab(text: 'Cost'),
             ],

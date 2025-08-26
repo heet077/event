@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../services/local_storage_service.dart';
 import '../../themes/app_theme.dart';
 import '../../utils/responsive_text_style.dart';
 import '../../utils/validators.dart';
@@ -49,7 +50,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text;
 
@@ -61,30 +62,59 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       return;
     }
 
-    // Dummy login check
-    if (username == 'admin' && password == 'admin123') {
-      ref.read(authProvider.notifier).state = UserModel(
-        username: username,
-        role: 'admin',
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else if (username == 'user' && password == 'user123') {
-      ref.read(authProvider.notifier).state = UserModel(
-        username: username,
-        role: 'user',
-      );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
-    } else {
+    try {
+      // Use the auth provider for login
+      final authNotifier = ref.read(authProvider.notifier);
+      
+      // For demo purposes, create a user model and call login
+      // In real app, this would be an API call
+      if (username == 'admin' && password == 'admin') {
+        final user = UserModel(
+          username: username,
+          role: 'admin',
+          email: '$username@example.com',
+        );
+        
+        // Save user data to shared preferences
+        final localStorage = ref.read(localStorageServiceProvider);
+        await localStorage.saveUserData(user);
+        
+        // Update auth state
+        ref.read(authProvider.notifier).state = user;
+        
+        print('✅ Admin user logged in: $username');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else if (username == 'user' && password == 'user') {
+        final user = UserModel(
+          username: username,
+          role: 'user',
+          email: '$username@example.com',
+        );
+        
+        // Save user data to shared preferences
+        final localStorage = ref.read(localStorageServiceProvider);
+        await localStorage.saveUserData(user);
+        
+        // Update auth state
+        ref.read(authProvider.notifier).state = user;
+        
+        print('✅ Regular user logged in: $username');
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      } else {
+        _scaffoldMessengerKey.currentState?.showSnackBar(
+          const SnackBar(content: Text('Invalid username or password')),
+        );
+      }
+    } catch (e) {
+      print('❌ Login error: $e');
       _scaffoldMessengerKey.currentState?.showSnackBar(
-        const SnackBar(content: Text('Invalid username or password')),
+        SnackBar(content: Text('Login failed: $e')),
       );
     }
   }
