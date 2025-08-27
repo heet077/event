@@ -6,7 +6,10 @@ import '../../themes/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/inventory_provider.dart';
 import '../event/event_screen.dart';
-import 'package:avd_decoration_application/views/inventory/add_inventory_screen.dart';
+import 'issue_inventory_screen.dart';
+import 'issued_items_screen.dart';
+import 'item_issue_history_screen.dart';
+import 'edit_inventory_screen.dart';
 
 class InventoryListScreen extends ConsumerStatefulWidget {
   const InventoryListScreen({super.key});
@@ -327,28 +330,11 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
               color: AppColors.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: item['imageBytes'] != null
-                ? ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.memory(
-                      item['imageBytes']!,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          _getCategoryIcon(item['category']),
-                          color: AppColors.primary,
-                          size: 24,
-                        );
-                      },
-                    ),
-                  )
-               : Icon(
-                   _getCategoryIcon(item['category']),
-                   color: AppColors.primary,
-                   size: 24,
-                 ),
+            child: Icon(
+              _getCategoryIcon(item['category']),
+              color: AppColors.primary,
+              size: 24,
+            ),
           ),
           title: Text(
             item['name'],
@@ -487,6 +473,22 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
                 _issueToEvent(item);
               },
             ),
+            ListTile(
+              leading: Icon(Icons.history, color: Colors.teal),
+              title: const Text('View Issue History'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ItemIssueHistoryPage(
+                      itemId: item['id'],
+                      itemName: item['name'],
+                    ),
+                  ),
+                );
+              },
+            ),
             const SizedBox(height: 20),
           ],
         ),
@@ -495,15 +497,10 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
   }
 
   void _editItem(Map<String, dynamic> item) {
-    // TODO: Navigate to edit form with pre-filled data
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Edit functionality coming soon!'),
-        backgroundColor: Colors.blue,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditInventoryPage(itemId: item['id']),
       ),
     );
   }
@@ -547,7 +544,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
      Navigator.push(
        context,
        MaterialPageRoute(
-         builder: (context) => InventoryIssueScreen(inventoryItem: item),
+         builder: (context) => IssueInventoryPage(inventoryItem: item),
        ),
      );
    }
@@ -556,7 +553,7 @@ class _InventoryListScreenState extends ConsumerState<InventoryListScreen> {
      Navigator.push(
        context,
        MaterialPageRoute(
-         builder: (context) => const IssuedItemsListScreen(),
+         builder: (context) => const IssuedItemsPage(),
        ),
      );
    }
@@ -1009,10 +1006,7 @@ class InventoryIssueScreen extends ConsumerStatefulWidget {
 
 class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
   // Get real events from the event provider
-  List<Map<String, dynamic>> get currentEvents {
-    final eventProvider = ref.read(eventListProvider.notifier);
-    return eventProvider.state;
-  }
+  List<Map<String, dynamic>> get currentEvents => ref.watch(eventListProvider);
 
   Map<String, dynamic>? selectedEvent;
   int issueQuantity = 1;
@@ -1055,17 +1049,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primary.withOpacity(0.05),
-                    AppColors.primary.withOpacity(0.02),
-                  ],
-                ),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
@@ -1246,17 +1233,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.blue.withOpacity(0.05),
-                    Colors.blue.withOpacity(0.02),
-                  ],
-                ),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
@@ -1391,17 +1371,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.purple.withOpacity(0.05),
-                    Colors.purple.withOpacity(0.02),
-                  ],
-                ),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.purple.withOpacity(0.1),
+                  color: Colors.purple.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
@@ -1497,17 +1470,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.orange.withOpacity(0.05),
-                    Colors.orange.withOpacity(0.02),
-                  ],
-                ),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
@@ -1553,17 +1519,10 @@ class _InventoryIssueScreenState extends ConsumerState<InventoryIssueScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.green.withOpacity(0.05),
-                    Colors.green.withOpacity(0.02),
-                  ],
-                ),
+                color: AppColors.secondary,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withOpacity(0.15),
                   width: 1,
                 ),
                 boxShadow: [
