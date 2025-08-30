@@ -89,53 +89,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               fit: BoxFit.cover,
             ),
           ),
-          // Loading indicator overlay
-          Container(
-            color: Colors.black.withOpacity(0.3),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (_isLoading || !isAuthReady) ...[
-                    const CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      !isAuthReady ? 'Initializing...' : 'Loading...',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ] else ...[
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 48,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Ready!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  // Debug button (only in debug mode)
-                  if (const bool.fromEnvironment('dart.vm.product') == false)
-                    ElevatedButton(
-                      onPressed: _testSharedPreferences,
-                      child: const Text('Test Shared Preferences'),
-                    ),
-                ],
-              ),
-            ),
-          ),
+
         ],
       ),
     );
@@ -149,20 +103,5 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     Navigator.pushReplacementNamed(context, route);
   }
 
-  // Debug method to test shared preferences
-  Future<void> _testSharedPreferences() async {
-    try {
-      final localStorage = ref.read(localStorageServiceProvider);
-      final keys = await localStorage.getAllKeys();
-      print('🔑 Current shared preferences keys: $keys');
-      
-      final userData = await localStorage.getUserData();
-      print('👤 Current user data: ${userData?.username ?? 'None'}');
-      
-      final isLoggedIn = await localStorage.isUserLoggedIn();
-      print('🔐 Is user logged in: $isLoggedIn');
-    } catch (e) {
-      print('❌ Error testing shared preferences: $e');
-    }
-  }
+
 }
