@@ -26,7 +26,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       print('🚀 App initialization started...');
       
       // Wait for auth provider to check saved session
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 5));
       
       // Set loading to false after initialization
       if (mounted) {
